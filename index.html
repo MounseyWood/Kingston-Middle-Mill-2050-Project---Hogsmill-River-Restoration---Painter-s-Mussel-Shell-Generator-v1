@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hogsmill River Restoration: Painter's Mussel Shell Pattern Generator</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐚</text></svg>">
+    <style>
+        :root {
+            /* KU Brand Colors */
+            --ku-yellow: #FFF200;
+            --ku-white: #FFFFFF;
+            --ku-black: #1D1D1B;
+            --ku-navy: #002b49;
+            --ku-blue: #009cde;
+            --ku-green: #78be20;
+            --ku-orange: #e35205;
+            --ku-gold: #ffb500;
+            --ku-aqua: #77c5d5;
+            --ku-tan: #857550;
+            
+            /* Natural mussel colors - Golden-yellow dominant palette */
+            --mussel-light: #D4B86A;      /* Golden base */
+            --mussel-medium: #C4A555;     /* Warm yellow */
+            --mussel-dark: #7A5F2A;       /* Dark growth lines */
+            --mussel-accent: #4A3D1F;     /* Deep brown */
+            
+            /* Environmental stress colors */
+            --stress-microplastic: #E0E0E0;       /* Light grey for microplastics */
+            --stress-heavy-metal: #2F2F2F;        /* Dark for heavy metals */
+            --stress-organic: #654321;            /* Brown for organic pollution */
+            --stress-thermal: #B22222;            /* Red for temperature stress */
+            
+            /* UI measurements */
+            --header-height: 60px;
+            --footer-height: 60px;
+            --controls-width: 340px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, "Helvetica Neue", sans-serif;
+        }
+        
+        body {
+            background-color: var(--ku-white);
+            color: var(--ku-black);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        header {
+            background-color: var(--ku-navy);
+            color: var(--ku-white);
+            padding: 1.2rem;
+            text-align: center;
+            height: var(--header-height);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        header h1 {
+            font-size: 1.4rem;
+            margin: 0;
+            font-weight: 500;
+        }
+        
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            height: calc(100vh - var(--header-height) - var(--footer-height));
+        }
+        
+        footer {
+            background-color: var(--ku-navy);
+            color: var(--ku-white);
+            text-align: center;
+            padding: 1.2rem 0.8rem;
+            font-size: 0.8rem;
+            height: var(--footer-height);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.2rem;
+        }
+        
+        .controls-panel {
+            width: var(--controls-width);
+            background-color: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        
+        .visualization-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background-color: #fff;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        
+        #patternCanvas {
+            background-color: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .timeline-controls {
+            height: 60px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            padding: 0.8rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        .playback-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .time-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #666;
+            gap: 0.2rem;
+        }
+        
+        /* Controls styling */
+        .control-group {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 1rem;
+        }
+        
+        .control-group:last-child {
+            border-bottom: none;
+        }
+        
+        .control-group h3 {
+            margin-bottom: 1rem;
+            color: var(--ku-navy);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .control-row {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .control-row label {
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .label-with-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .value-display {
+            font-weight: normal;
+            color: var(--ku-navy);
+            font-size: 0.85rem;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-top: 0.3rem;
+            height: 6px;
+            border-radius: 3px;
+            background: #e9ecef;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--ku-navy);
+            cursor: pointer;
+            border: 2px solid var(--ku-white);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--ku-navy);
+            cursor: pointer;
+            border: 2px solid var(--ku-white);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Custom range track fill */
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: linear-gradient(to right, var(--ku-navy) 0%, var(--ku-navy) var(--value, 0%), #e9ecef var(--value, 0%), #e9ecef 100%);
+        }
+        
+        select, button {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            background-color: white;
+            width: 100%;
+            font-size: 0.9rem;
+        }
+        
+        button {
+            background-color: var(--ku-navy);
+            color: white;
+            cursor: pointer;
+            border: none;
+            padding: 0.7rem 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            margin-top: 0.5rem;
+        }
+        
+        button:hover {
+            background-color: var(--ku-blue);
+        }
+        
+        button.secondary {
+            background-color: var(--ku-aqua);
+            color: var(--ku-navy);
+        }
+        
+        button.secondary:hover {
+            background-color: var(--ku-blue);
+            color: white;
+        }
+        
+        .info-icon {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            min-height: 20px;
+            background-color: #6c757d;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            border: none;
+            padding: 0;
+        }
+        
+        .info-icon:hover {
+            background-color: var(--ku-navy);
+        }
+        
+        /* Modal for info */
+        .info-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .info-modal.show {
+            display: flex;
+        }
+        
+        .info-modal-content {
+            background-color: var(--ku-white);
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .info-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            width: auto;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .info-modal-close:hover {
+            color: var(--ku-navy);
+            background: none;
+        }
+        
+        .info-modal h3 {
+            color: var(--ku-navy);
+            margin-bottom: 1rem;
+        }
+        
+        .info-modal p {
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        /* Playback control buttons */
+        .play-button {
+            background-color: var(--ku-aqua);
+            color: var(--ku-navy);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            padding: 0;
+            font-weight: 600;
+        }
+        
+        .play-button:hover {
+            background-color: var(--ku-blue);
+            color: white;
+        }
+        
+        /* Tab system */
+        .info-tabs {
+            margin-top: 1rem;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+        }
+        
+        .tab-button {
+            padding: 0.4rem 0.6rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6c757d;
+            border-bottom: 2px solid transparent;
+            margin: 0;
+            font-size: 0.75rem;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .tab-button.active {
+            color: var(--ku-navy);
+            border-bottom: 2px solid var(--ku-aqua);
+            background-color: transparent;
+        }
+        
+        .tab-content {
+            padding: 1rem 0;
+        }
+        
+        .tab-panel {
+            display: none;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .tab-panel.active {
+            display: block;
+        }
+        
+        .tab-panel p {
+            margin-bottom: 0.8rem;
+        }
+        
+        .tab-panel ul {
+            margin: 0.5rem 0 1rem 1.5rem;
+        }
+        
+        .tab-panel li {
+            margin-bottom: 0.3rem;
+        }
+        
+        .external-link {
+            color: var(--ku-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .external-link:hover {
+            text-decoration: underline;
+        }
+        
+        .timeline-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--ku-aqua);
+            padding: 0.8rem;
+            margin: 0.8rem 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .timeline-info h4 {
+            color: var(--ku-navy);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .timeline-info p {
+            margin-bottom: 0.3rem;
+            font-size: 0.85rem;
+        }
+        
+        .lifecycle-stage {
+            background-color: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 0.8rem;
+            margin: 0.8rem 0;
+        }
+        
+        .lifecycle-stage h4 {
+            color: var(--ku-navy);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .stage-duration {
+            color: var(--ku-blue);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        /* Status indicators */
+        .ecosystem-status {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .status-indicator {
+            background-color: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 4px;
+            text-align: center;
+            border-left: 3px solid var(--ku-aqua);
+        }
+        
+        .status-label {
+            font-size: 0.7rem;
+            color: #6c757d;
+            margin-bottom: 0.2rem;
+        }
+        
+        .status-value {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--ku-navy);
+        }
+        
+        .status-indicator.good {
+            border-left-color: var(--ku-green);
+        }
+        
+        .status-indicator.moderate {
+            border-left-color: var(--ku-gold);
+        }
+        
+        .status-indicator.poor {
+            border-left-color: var(--ku-orange);
+        }
+        
+        /* Loading overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--ku-aqua);
+            border-top: 4px solid var(--ku-navy);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Screen reader only */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            main {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .controls-panel {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+            
+            .visualization-panel {
+                height: 70vh;
+                min-height: 400px;
+            }
+            
+            .canvas-container {
+                padding: 1rem;
+            }
+            
+            #patternCanvas {
+                width: 100%;
+                max-width: 400px;
+                height: auto;
+            }
+            
+            header {
+                padding: 1.5rem 1rem;
+            }
+            
+            header h1 {
+                font-size: 1.2rem;
+            }
+            
+            footer {
+                padding: 1.5rem 1rem;
+            }
+            
+            .timeline-controls {
+                gap: 1rem;
+            }
+            
+            .playback-controls {
+                gap: 1rem;
+            }
+            
+            .play-button {
+                width: 45px;
+                height: 45px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            header {
+                padding: 1.2rem 0.8rem;
+            }
+            
+            footer {
+                padding: 1.2rem 0.8rem;
+            }
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Hogsmill River Restoration: Painter's Mussel Shell Pattern Generator</h1>
+    </header>
+    
+    <main>
+        <section class="controls-panel">
+            
+            <div class="control-group">
+                <h3>Restoration Scenario</h3>
+                <div class="control-row">
+                    <div class="label-with-info">
+                        <span>Restoration Scenario</span>
+                        <button class="info-icon" data-info="restoration-scenario" aria-label="Information about restoration scenarios">?</button>
+                    </div>
+                    <select id="climateScenario">
+                        <option value="pre-industrial">Pre-Industrial Baseline (1800s)</option>
+                        <option value="historical">Historical Peak Pollution (1960s)</option>
+                        <option value="current" selected>Current Status (Summer 2025)</option>
+                        <option value="restoration-2030">Restoration Target (2030)</option>
+                        <option value="full-recovery">Full Recovery (2045)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Ecosystem Health</h3>
+                <div class="control-row">
+                    <label for="hostFishPopulation">
+                        <div class="label-with-info">
+                            <span>Host Fish Population</span>
+                            <button class="info-icon" data-info="host-fish" aria-label="Information about host fish population">?</button>
+                        </div>
+                        <span class="value-display" id="hostFishValue">25</span>
+                    </label>
+                    <input type="range" id="hostFishPopulation" min="0" max="100" step="1" value="25">
+                </div>
+                
+                <div class="control-row">
+                    <label for="habitatConnectivity">
+                        <div class="label-with-info">
+                            <span>Habitat Connectivity</span>
+                            <button class="info-icon" data-info="connectivity" aria-label="Information about habitat connectivity">?</button>
+                        </div>
+                        <span class="value-display" id="connectivityValue">85</span>
+                    </label>
+                    <input type="range" id="habitatConnectivity" min="0" max="100" step="1" value="85">
+                </div>
+                
+                <div class="control-row">
+                    <label for="sedimentQuality">
+                        <div class="label-with-info">
+                            <span>Sediment Quality</span>
+                            <button class="info-icon" data-info="sediment" aria-label="Information about sediment quality">?</button>
+                        </div>
+                        <span class="value-display" id="sedimentValue">45</span>
+                    </label>
+                    <input type="range" id="sedimentQuality" min="0" max="100" step="1" value="45">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Water Quality</h3>
+                <div class="control-row">
+                    <label for="phosphate">
+                        <div class="label-with-info">
+                            <span>Phosphate Level (mg/l)</span>
+                            <button class="info-icon" data-info="phosphate" aria-label="Information about phosphate levels">?</button>
+                        </div>
+                        <span class="value-display" id="phosphateValue">0.06</span>
+                    </label>
+                    <input type="range" id="phosphate" min="0.01" max="0.2" step="0.01" value="0.06">
+                </div>
+                
+                <div class="control-row">
+                    <label for="ammonia">
+                        <div class="label-with-info">
+                            <span>Ammonia Level (mg/l)</span>
+                            <button class="info-icon" data-info="ammonia" aria-label="Information about ammonia levels">?</button>
+                        </div>
+                        <span class="value-display" id="ammoniaValue">1.4</span>
+                    </label>
+                    <input type="range" id="ammonia" min="0.1" max="5" step="0.1" value="1.4">
+                </div>
+                
+                <div class="control-row">
+                    <label for="oxygen">
+                        <div class="label-with-info">
+                            <span>Dissolved Oxygen (%)</span>
+                            <button class="info-icon" data-info="oxygen" aria-label="Information about dissolved oxygen">?</button>
+                        </div>
+                        <span class="value-display" id="oxygenValue">72</span>
+                    </label>
+                    <input type="range" id="oxygen" min="20" max="100" step="1" value="72">
+                </div>
+                
+                <div class="control-row">
+                    <label for="temperature">
+                        <div class="label-with-info">
+                            <span>Water Temperature (°C)</span>
+                            <button class="info-icon" data-info="temperature" aria-label="Information about water temperature">?</button>
+                        </div>
+                        <span class="value-display" id="temperatureValue">15.5</span>
+                    </label>
+                    <input type="range" id="temperature" min="5" max="25" step="0.5" value="15.5">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Pollution Impacts</h3>
+                <div class="control-row">
+                    <label for="microplastics">
+                        <div class="label-with-info">
+                            <span>Microplastics (particles/L)</span>
+                            <button class="info-icon" data-info="microplastics" aria-label="Information about microplastics">?</button>
+                        </div>
+                        <span class="value-display" id="microplasticsValue">35</span>
+                    </label>
+                    <input type="range" id="microplastics" min="0" max="100" step="1" value="35">
+                </div>
+                
+                <div class="control-row">
+                    <label for="heavyMetals">
+                        <div class="label-with-info">
+                            <span>Heavy Metals (μg/L)</span>
+                            <button class="info-icon" data-info="heavy-metals" aria-label="Information about heavy metals">?</button>
+                        </div>
+                        <span class="value-display" id="heavyMetalsValue">12</span>
+                    </label>
+                    <input type="range" id="heavyMetals" min="0" max="50" step="1" value="12">
+                </div>
+                
+                <div class="control-row">
+                    <label for="sewageSpills">
+                        <div class="label-with-info">
+                            <span>Sewage Spills (events/year)</span>
+                            <button class="info-icon" data-info="sewage" aria-label="Information about sewage spills">?</button>
+                        </div>
+                        <span class="value-display" id="sewageValue">6</span>
+                    </label>
+                    <input type="range" id="sewageSpills" min="0" max="50" step="1" value="6">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Growth Parameters</h3>
+                <div class="control-row">
+                    <label for="growthPeriod">
+                        <div class="label-with-info">
+                            <span>Growth Period (Years)</span>
+                            <button class="info-icon" data-info="growth-period" aria-label="Information about growth period">?</button>
+                        </div>
+                        <span class="value-display" id="growthPeriodValue">8</span>
+                    </label>
+                    <input type="range" id="growthPeriod" min="3" max="20" step="1" value="8">
+                </div>
+            </div>
+            
+            <div class="ecosystem-status">
+                <div class="status-indicator moderate" id="populationStatus">
+                    <div class="status-label">Population Viability</div>
+                    <div class="status-value">Marginal</div>
+                </div>
+                <div class="status-indicator moderate" id="waterQualityStatus">
+                    <div class="status-label">Water Quality</div>
+                    <div class="status-value">Moderate</div>
+                </div>
+                <div class="status-indicator good" id="connectivityStatus">
+                    <div class="status-label">Connectivity</div>
+                    <div class="status-value">Good</div>
+                </div>
+                <div class="status-indicator poor" id="pollutionStatus">
+                    <div class="status-label">Pollution Load</div>
+                    <div class="status-value">High</div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Export Options</h3>
+                <div class="control-row">
+                    <button id="regenerateBtn">Regenerate Pattern</button>
+                    <button id="downloadBtn" class="secondary">Download Pattern</button>
+                </div>
+            </div>
+            
+            <div class="info-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="lifecycle">Lifecycle</button>
+                    <button class="tab-button" data-tab="restoration">Restoration</button>
+                    <button class="tab-button" data-tab="hogsmill">Hogsmill</button>
+                    <button class="tab-button" data-tab="research">Research</button>
+                </div>
+                
+                <div class="tab-content">
+                    <div class="tab-panel active" id="lifecycleTab">
+                        <p><strong>Painter's Mussels record decades of environmental history in their shells.</strong></p>
+                        
+                        <div class="lifecycle-stage">
+                            <h4>Glochidia Stage</h4>
+                            <p class="stage-duration">20-30 days</p>
+                            <p>Parasitic larvae attach to fish gills (brown trout, dace, perch). Only 5-12% successfully complete metamorphosis. This critical stage explains why fish populations are essential for mussel reproduction.</p>
+                        </div>
+                        
+                        <div class="lifecycle-stage">
+                            <h4>Juvenile Development</h4>
+                            <p class="stage-duration">1-3 years</p>
+                            <p>Buried in river sediments, developing filtering gills. Habitat quality during this stage determines survival to adulthood. Requires clean sediment, stable flow, and low siltation.</p>
+                        </div>
+                        
+                        <div class="lifecycle-stage">
+                            <h4>Adult Filter-Feeder</h4>
+                            <p class="stage-duration">10-15 years active reproduction</p>
+                            <p>Reproductive maturity at 3-5 years (40-50mm shell size). Each adult filters 250L water per day, providing crucial ecosystem services. Growth bands record annual environmental conditions.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-panel" id="restorationTab">
+                        <p><strong>Mussel population recovery requires decades of sustained restoration efforts.</strong></p>
+                        
+                        <div class="timeline-info">
+                            <h4>Phase 1: Foundation (2025-2027)</h4>
+                            <p><strong>Actions:</strong> Fish passage completion, pollution source reduction, sediment improvement</p>
+                            <p><strong>Mussel Impact:</strong> No immediate benefits - foundation work only</p>
+                        </div>
+                        
+                        <div class="timeline-info">
+                            <h4>Phase 2: Recovery (2028-2032)</h4>
+                            <p><strong>Actions:</strong> Fish population recovery, habitat stabilization, water quality improvement</p>
+                            <p><strong>Mussel Impact:</strong> First potential for mussel reintroduction if host fish established</p>
+                        </div>
+                        
+                        <div class="timeline-info">
+                            <h4>Phase 3: Establishment (2033-2045)</h4>
+                            <p><strong>Actions:</strong> Mussel population establishment, ecosystem service restoration</p>
+                            <p><strong>Mussel Impact:</strong> Self-sustaining populations providing natural water filtration</p>
+                        </div>
+                        
+                        <p><em>Timeline shows why mussel conservation requires long-term commitment and integrated ecosystem restoration.</em></p>
+                    </div>
+                    
+                    <div class="tab-panel" id="hogsmillTab">
+                        <p><strong>The Hogsmill River is one of only 200 rare chalk streams worldwide.</strong></p>
+                        
+                        <p>Kingston School of Art has overlooked this precious waterway since 1939, but the river faces serious environmental challenges despite ongoing restoration efforts.</p>
+                        
+                        <p><strong>Current Restoration Projects:</strong></p>
+                        <ul>
+                            <li><a href="https://www.southeastriverstrust.org/projects/wet-hogsmill/" class="external-link" target="_blank">WET Hogsmill Project</a> (2023-2025): £393,000 investment in fish passage and habitat restoration</li>
+                            <li>18 of 19 historic weirs now passable for fish migration</li>
+                            <li>Water vole reintroduction program</li>
+                            <li>European eel habitat creation</li>
+                        </ul>
+                        
+                        <p><strong>Water Quality Monitoring:</strong></p>
+                        <ul>
+                            <li><a href="https://environment.data.gov.uk/catchment-planning/WaterBody/GB106039017440" class="external-link" target="_blank">Environment Agency Data</a> shows "Moderate" ecological status</li>
+                            <li>Chemical status still "Fail" due to pollutants</li>
+                            <li>Sewage spills decreased but still exceed mussel tolerance</li>
+                        </ul>
+                        
+                        <p><em>No Painter's Mussels currently documented in the Hogsmill, but restoration progress suggests future reintroduction potential.</em></p>
+                    </div>
+                    
+                    <div class="tab-panel" id="researchTab">
+                        <p><strong>Scientific research validates shell patterns as environmental recorders.</strong></p>
+                        
+                        <p><strong>Recent Studies:</strong></p>
+                        <ul>
+                            <li><a href="https://onlinelibrary.wiley.com/doi/10.1111/gcb.17532" class="external-link" target="_blank">Freshwater Mussel Shells Reveal Environmental Change</a> - 3,300 years of hydrological records</li>
+                            <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11369190/" class="external-link" target="_blank">Clumped Isotopes Reveal Growth-Discharge Relationships</a> - Growth band validation studies</li>
+                            <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10100069/" class="external-link" target="_blank">Global Freshwater Mussel Conservation</a> - Emerging threats and opportunities</li>
+                        </ul>
+                        
+                        <p><strong>Key Findings:</strong></p>
+                        <ul>
+                            <li>94% accuracy in growth band validation through cross-dating</li>
+                            <li>Microplastics reduce growth rates by 35.6%</li>
+                            <li>Temperature is primary driver of seasonal band formation</li>
+                            <li>Heavy metals create distinctive shell mineralization patterns</li>
+                        </ul>
+                        
+                        <p><strong>UK Conservation Strategy:</strong></p>
+                        <ul>
+                            <li><a href="https://catchmentbasedapproach.org/learn/chalk-stream-strategy/" class="external-link" target="_blank">Chalk Stream Strategy</a> - National protection framework</li>
+                            <li>95% decline in Thames tributary mussel populations since 1960s</li>
+                            <li>Host fish restoration critical for mussel recovery</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="visualization-panel">
+            <div class="canvas-container">
+                <canvas id="patternCanvas" width="600" height="600" aria-label="Mussel shell pattern visualization"></canvas>
+                <div id="loadingOverlay" class="loading-overlay">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <div>Generating scientifically accurate shell pattern...</div>
+                    <div style="font-size: 0.8rem; margin-top: 0.5rem; color: #666;">Please wait while environmental conditions are processed</div>
+                </div>
+            </div>
+            
+            <div class="timeline-controls">
+                <div class="playback-controls">
+                    <button id="playBtn" class="play-button" aria-label="Play animation">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 3L12 8L4 13V3Z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    
+                    <div class="time-display">
+                        <div style="font-size: 0.75rem; color: #999;">Current</div>
+                        <div id="currentTime">0y 0m</div>
+                    </div>
+                    
+                    <div class="time-display">
+                        <div style="font-size: 0.75rem; color: #999;">Total</div>
+                        <div id="totalTime">8y 0m</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>Kingston School of Art © 2025 | Data sources: Environment Agency, Thames Water, South East Rivers Trust, WET Hogsmill Project</p>
+        <p>Created by Matthew Mounsey-Wood with assist from Claude AI</p>
+    </footer>
+    
+    <!-- Info Modal -->
+    <div id="infoModal" class="info-modal">
+        <div class="info-modal-content">
+            <button class="info-modal-close" aria-label="Close information modal">&times;</button>
+            <h3 id="modalTitle">Information</h3>
+            <p id="modalContent">Information content goes here.</p>
+        </div>
+    </div>
+    
+    <div id="statusMessage" class="sr-only" aria-live="polite"></div>
+    
+    <script>
+        // Canvas and context
+        const canvas = document.getElementById('patternCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Responsive canvas sizing
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const containerWidth = container.clientWidth - 40; // Account for padding
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                const maxSize = Math.min(containerWidth, 400);
+                canvas.width = maxSize;
+                canvas.height = maxSize;
+                canvas.style.width = maxSize + 'px';
+                canvas.style.height = maxSize + 'px';
+            } else {
+                canvas.width = 600;
+                canvas.height = 600;
+                canvas.style.width = '600px';
+                canvas.style.height = '600px';
+            }
+            
+            // Update total rows based on canvas height
+            appState.totalRows = canvas.height;
+            appState.monthsPerRow = (appState.growthYears * 12) / appState.totalRows;
+        }
+        
+        // UI Elements
+        const playBtn = document.getElementById('playBtn');
+        const currentTimeDisplay = document.getElementById('currentTime');
+        const totalTimeDisplay = document.getElementById('totalTime');
+        const regenerateBtn = document.getElementById('regenerateBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const statusMessage = document.getElementById('statusMessage');
+        
+        // Info modal elements
+        const infoModal = document.getElementById('infoModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+        const modalClose = document.querySelector('.info-modal-close');
+        
+        // Tab system
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+        
+        // Input elements
+        const climateScenarioSelect = document.getElementById('climateScenario');
+        const hostFishInput = document.getElementById('hostFishPopulation');
+        const hostFishValue = document.getElementById('hostFishValue');
+        const connectivityInput = document.getElementById('habitatConnectivity');
+        const connectivityValue = document.getElementById('connectivityValue');
+        const sedimentInput = document.getElementById('sedimentQuality');
+        const sedimentValue = document.getElementById('sedimentValue');
+        const phosphateInput = document.getElementById('phosphate');
+        const phosphateValue = document.getElementById('phosphateValue');
+        const ammoniaInput = document.getElementById('ammonia');
+        const ammoniaValue = document.getElementById('ammoniaValue');
+        const oxygenInput = document.getElementById('oxygen');
+        const oxygenValue = document.getElementById('oxygenValue');
+        const temperatureInput = document.getElementById('temperature');
+        const temperatureValue = document.getElementById('temperatureValue');
+        const microplasticsInput = document.getElementById('microplastics');
+        const microplasticsValue = document.getElementById('microplasticsValue');
+        const heavyMetalsInput = document.getElementById('heavyMetals');
+        const heavyMetalsValue = document.getElementById('heavyMetalsValue');
+        const sewageInput = document.getElementById('sewageSpills');
+        const sewageValue = document.getElementById('sewageValue');
+        const growthPeriodInput = document.getElementById('growthPeriod');
+        const growthPeriodValue = document.getElementById('growthPeriodValue');
+        
+        // Status indicators
+        const populationStatus = document.getElementById('populationStatus');
+        const waterQualityStatus = document.getElementById('waterQualityStatus');
+        const connectivityStatus = document.getElementById('connectivityStatus');
+        const pollutionStatus = document.getElementById('pollutionStatus');
+        
+        // Info modal content
+        const infoContent = {
+            'restoration-scenario': {
+                title: 'Restoration Scenarios',
+                content: 'Choose a restoration scenario to see how different environmental conditions affect mussel growth patterns. Current status reflects Hogsmill River conditions as of Summer 2025.'
+            },
+            'host-fish': {
+                title: 'Host Fish Population',
+                content: 'Brown trout, European dace, and perch populations essential for mussel reproduction. Glochidia larvae must attach to fish gills for 20-30 days. Current Hogsmill restoration is improving fish passage through 19 historic weirs.'
+            },
+            'connectivity': {
+                title: 'Habitat Connectivity',
+                content: 'River connectivity for fish movement and mussel dispersal. WET Hogsmill project has made 18 of 19 weirs passable, enabling first continuous fish passage from Thames to Ewell headwaters in over 200 years.'
+            },
+            'sediment': {
+                title: 'Sediment Quality',
+                content: 'Clean, stable sediment is crucial for juvenile mussels who spend 1-3 years buried before emerging as filter-feeders. Urban runoff and siltation degrade juvenile survival rates.'
+            },
+            'phosphate': {
+                title: 'Phosphate Levels',
+                content: 'Target for healthy mussels is below 0.03 mg/l. Excess phosphate causes algal blooms and creates stress bands in shell formation. Current Hogsmill levels exceed mussel habitat criteria.'
+            },
+            'ammonia': {
+                title: 'Ammonia Levels',
+                content: 'Target for healthy mussels is below 1.0 mg/l. Ammonia from sewage causes shell mineralization problems and creates dark stress bands parallel to growth rings.'
+            },
+            'oxygen': {
+                title: 'Dissolved Oxygen',
+                content: 'Target for healthy mussels is above 80% saturation. Low oxygen affects growth band clarity and forces anaerobic respiration, creating characteristic dark band formation.'
+            },
+            'temperature': {
+                title: 'Water Temperature',
+                content: 'Optimal range for Painter\'s Mussels is 10-20°C. Temperature is the primary driver of seasonal growth bands. Climate change increases temperature stress and asymmetry in shell patterns.'
+            },
+            'microplastics': {
+                title: 'Microplastics',
+                content: 'Microplastics reduce mussel growth by 35% and appear as grey-white speckled particles in shell matrix. All UK freshwater mussels now contain microplastics, with polyester fibers being most common.'
+            },
+            'heavy-metals': {
+                title: 'Heavy Metals',
+                content: 'Zinc, copper, and lead from urban runoff cause shell weakening and dark mineralization disruption parallel to growth bands. Heavy metals interfere with calcium carbonate shell formation.'
+            },
+            'sewage': {
+                title: 'Sewage Spills',
+                content: 'Hogsmill experienced 9 sewage spills in 2022 lasting over 70 hours. Thames Water aims to reduce to less than 10 per year by 2050. Creates dark, oily-appearing stress bands and growth interruptions.'
+            },
+            'growth-period': {
+                title: 'Growth Period',
+                content: 'Painter\'s Mussels live 10-20 years. Reproductive maturity at 3-5 years, colony establishment takes 5-7 years. Each year creates distinct growth bands recording environmental conditions.'
+            }
+        };
+        
+        // Application state
+        const appState = {
+            isPlaying: false,
+            currentRow: 0,
+            totalRows: canvas.height,
+            speed: 2, // Set to 2x speed
+            animationFrameId: null,
+            growthYears: 8,
+            monthsPerRow: 0,
+            climateScenario: 'current',
+            environmentalHistory: [],
+            environmentalEvents: [],
+            
+            // Enhanced parameters
+            hostFishPopulation: 25,
+            habitatConnectivity: 85,
+            sedimentQuality: 45,
+            phosphate: 0.06,
+            ammonia: 1.4,
+            oxygen: 72,
+            temperature: 15.5,
+            microplastics: 35,
+            heavyMetals: 12,
+            sewageSpills: 6,
+            
+            // Enhanced colors with golden-yellow tones
+            baseColor: { r: 212, g: 184, b: 106 },    // #D4B86A - Golden base
+            mediumColor: { r: 196, g: 165, b: 85 },   // #C4A555 - Warm yellow  
+            darkColor: { r: 122, g: 95, b: 42 },      // #7A5F2A - Dark growth lines
+            accentColor: { r: 74, g: 61, b: 31 },     // #4A3D1F - Deep brown
+            
+            // Stress colors
+            microplasticColor: { r: 224, g: 224, b: 224 }, // Light grey-white
+            heavyMetalColor: { r: 47, g: 47, b: 47 },       // Dark grey
+            organicColor: { r: 101, g: 67, b: 33 },        // Brown
+            thermalColor: { r: 178, g: 34, b: 34 }         // Red
+        };
+        
+        // Growth parameters based on research
+        const GROWTH_PARAMETERS = {
+            maxLifespan: 20,
+            reproductiveMaturity: 4,
+            colonyEstablishment: 6,
+            juvenileDevelopment: 2,
+            glochidiaStage: 0.08
+        };
+        
+        // Initialize UI
+        function initializeUI() {
+            hostFishInput.value = appState.hostFishPopulation;
+            hostFishValue.textContent = appState.hostFishPopulation;
+            
+            connectivityInput.value = appState.habitatConnectivity;
+            connectivityValue.textContent = appState.habitatConnectivity;
+            
+            sedimentInput.value = appState.sedimentQuality;
+            sedimentValue.textContent = appState.sedimentQuality;
+            
+            phosphateInput.value = appState.phosphate;
+            phosphateValue.textContent = appState.phosphate;
+            
+            ammoniaInput.value = appState.ammonia;
+            ammoniaValue.textContent = appState.ammonia;
+            
+            oxygenInput.value = appState.oxygen;
+            oxygenValue.textContent = appState.oxygen;
+            
+            temperatureInput.value = appState.temperature;
+            temperatureValue.textContent = appState.temperature;
+            
+            microplasticsInput.value = appState.microplastics;
+            microplasticsValue.textContent = appState.microplastics;
+            
+            heavyMetalsInput.value = appState.heavyMetals;
+            heavyMetalsValue.textContent = appState.heavyMetals;
+            
+            sewageInput.value = appState.sewageSpills;
+            sewageValue.textContent = appState.sewageSpills;
+            
+            growthPeriodInput.value = appState.growthYears;
+            growthPeriodValue.textContent = appState.growthYears;
+            
+            totalTimeDisplay.textContent = `${appState.growthYears}y 0m`;
+            
+            updateEcosystemStatus();
+        }
+        
+        // Enhanced input event listeners with ecosystem status updates
+        function setupEventListeners() {
+            // Info modal setup
+            document.querySelectorAll('.info-icon').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const infoKey = button.getAttribute('data-info');
+                    showInfoModal(infoKey);
+                });
+            });
+            
+            modalClose.addEventListener('click', hideInfoModal);
+            infoModal.addEventListener('click', (e) => {
+                if (e.target === infoModal) hideInfoModal();
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && infoModal.classList.contains('show')) {
+                    hideInfoModal();
+                }
+            });
+            
+            // Ecosystem parameters
+            hostFishInput.addEventListener('input', () => {
+                appState.hostFishPopulation = parseInt(hostFishInput.value);
+                hostFishValue.textContent = appState.hostFishPopulation;
+                updateEcosystemStatus();
+            });
+            
+            connectivityInput.addEventListener('input', () => {
+                appState.habitatConnectivity = parseInt(connectivityInput.value);
+                connectivityValue.textContent = appState.habitatConnectivity;
+                updateEcosystemStatus();
+            });
+            
+            sedimentInput.addEventListener('input', () => {
+                appState.sedimentQuality = parseInt(sedimentInput.value);
+                sedimentValue.textContent = appState.sedimentQuality;
+                updateEcosystemStatus();
+            });
+            
+            // Water quality parameters
+            phosphateInput.addEventListener('input', () => {
+                appState.phosphate = parseFloat(phosphateInput.value);
+                phosphateValue.textContent = appState.phosphate;
+                updateEcosystemStatus();
+            });
+            
+            ammoniaInput.addEventListener('input', () => {
+                appState.ammonia = parseFloat(ammoniaInput.value);
+                ammoniaValue.textContent = appState.ammonia;
+                updateEcosystemStatus();
+            });
+            
+            oxygenInput.addEventListener('input', () => {
+                appState.oxygen = parseInt(oxygenInput.value);
+                oxygenValue.textContent = appState.oxygen;
+                updateEcosystemStatus();
+            });
+            
+            temperatureInput.addEventListener('input', () => {
+                appState.temperature = parseFloat(temperatureInput.value);
+                temperatureValue.textContent = appState.temperature;
+                updateEcosystemStatus();
+            });
+            
+            // Pollution parameters
+            microplasticsInput.addEventListener('input', () => {
+                appState.microplastics = parseInt(microplasticsInput.value);
+                microplasticsValue.textContent = appState.microplastics;
+                updateEcosystemStatus();
+            });
+            
+            heavyMetalsInput.addEventListener('input', () => {
+                appState.heavyMetals = parseInt(heavyMetalsInput.value);
+                heavyMetalsValue.textContent = appState.heavyMetals;
+                updateEcosystemStatus();
+            });
+            
+            sewageInput.addEventListener('input', () => {
+                appState.sewageSpills = parseInt(sewageInput.value);
+                sewageValue.textContent = appState.sewageSpills;
+                updateEcosystemStatus();
+            });
+            
+            // Growth period
+            growthPeriodInput.addEventListener('input', () => {
+                appState.growthYears = parseInt(growthPeriodInput.value);
+                growthPeriodValue.textContent = appState.growthYears;
+                totalTimeDisplay.textContent = `${appState.growthYears}y 0m`;
+                appState.monthsPerRow = (appState.growthYears * 12) / appState.totalRows;
+            });
+            
+            // Climate scenario
+            climateScenarioSelect.addEventListener('change', () => {
+                appState.climateScenario = climateScenarioSelect.value;
+                updateClimateScenarioParameters();
+            });
+            
+            // Control buttons
+            playBtn.addEventListener('click', togglePlayPause);
+            regenerateBtn.addEventListener('click', regeneratePattern);
+            downloadBtn.addEventListener('click', downloadPattern);
+            
+            // Tab system
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabPanels.forEach(panel => panel.classList.remove('active'));
+                    button.classList.add('active');
+                    const tabId = button.getAttribute('data-tab') + 'Tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+        
+        // Info modal functions
+        function showInfoModal(infoKey) {
+            const info = infoContent[infoKey];
+            if (info) {
+                modalTitle.textContent = info.title;
+                modalContent.textContent = info.content;
+                infoModal.classList.add('show');
+            }
+        }
+        
+        function hideInfoModal() {
+            infoModal.classList.remove('show');
+        }
+        
+        // Update ecosystem status indicators
+        function updateEcosystemStatus() {
+            const populationViability = calculatePopulationViability();
+            const waterQuality = calculateWaterQualityScore();
+            const connectivity = appState.habitatConnectivity;
+            const pollutionLoad = calculatePollutionLoad();
+            
+            updateStatusIndicator(populationStatus, populationViability, 
+                populationViability > 70 ? 'Viable' : 
+                populationViability > 40 ? 'Marginal' : 'Not Viable');
+                
+            updateStatusIndicator(waterQualityStatus, waterQuality * 100,
+                waterQuality > 0.7 ? 'Good' : 
+                waterQuality > 0.4 ? 'Moderate' : 'Poor');
+                
+            updateStatusIndicator(connectivityStatus, connectivity,
+                connectivity > 70 ? 'Good' : 
+                connectivity > 40 ? 'Moderate' : 'Poor');
+                
+            updateStatusIndicator(pollutionStatus, 100 - pollutionLoad,
+                pollutionLoad < 30 ? 'Low' : 
+                pollutionLoad < 60 ? 'Moderate' : 'High');
+        }
+        
+        function updateStatusIndicator(element, value, label) {
+            const valueElement = element.querySelector('.status-value');
+            valueElement.textContent = label;
+            
+            element.classList.remove('good', 'moderate', 'poor');
+            if (value > 70) element.classList.add('good');
+            else if (value > 40) element.classList.add('moderate');
+            else element.classList.add('poor');
+        }
+        
+        function calculatePopulationViability() {
+            const hostFishFactor = appState.hostFishPopulation * 0.4;
+            const waterQualityFactor = calculateWaterQualityScore() * 100 * 0.3;
+            const connectivityFactor = appState.habitatConnectivity * 0.2;
+            const sedimentFactor = appState.sedimentQuality * 0.1;
+            
+            return Math.min(100, hostFishFactor + waterQualityFactor + connectivityFactor + sedimentFactor);
+        }
+        
+        function calculateWaterQualityScore() {
+            const phosphateScore = 1 - Math.min(1, appState.phosphate / 0.1);
+            const ammoniaScore = 1 - Math.min(1, appState.ammonia / 3);
+            const oxygenScore = appState.oxygen / 100;
+            const tempScore = 1 - Math.min(1, Math.abs(appState.temperature - 14) / 10);
+            
+            return (phosphateScore + ammoniaScore + oxygenScore + tempScore) / 4;
+        }
+        
+        function calculatePollutionLoad() {
+            return (appState.microplastics + appState.heavyMetals + appState.sewageSpills * 2) / 1.5;
+        }
+        
+        // Enhanced climate scenario parameters - Modified Historical Peak to be most polluted
+        function updateClimateScenarioParameters() {
+            const scenario = appState.climateScenario;
+            
+            switch (scenario) {
+                case 'pre-industrial':
+                    setParameters(15, 90, 85, 0.02, 0.3, 95, 12, 0, 0, 0);
+                    break;
+                case 'historical': // Historical Peak - Most polluted period
+                    setParameters(5, 30, 25, 0.15, 4.5, 45, 14, 80, 45, 40);
+                    break;
+                case 'current':
+                    setParameters(25, 85, 45, 0.06, 1.4, 72, 15.5, 35, 12, 6);
+                    break;
+                case 'restoration-2030':
+                    setParameters(55, 95, 70, 0.04, 0.9, 82, 16, 25, 8, 3);
+                    break;
+                case 'full-recovery':
+                    setParameters(80, 98, 85, 0.025, 0.6, 88, 16.5, 15, 5, 1);
+                    break;
+            }
+            
+            updateUI();
+            updateEcosystemStatus();
+        }
+        
+        function setParameters(hostFish, connectivity, sediment, phosphate, ammonia, oxygen, temp, microplastics, heavyMetals, sewage) {
+            appState.hostFishPopulation = hostFish;
+            appState.habitatConnectivity = connectivity;
+            appState.sedimentQuality = sediment;
+            appState.phosphate = phosphate;
+            appState.ammonia = ammonia;
+            appState.oxygen = oxygen;
+            appState.temperature = temp;
+            appState.microplastics = microplastics;
+            appState.heavyMetals = heavyMetals;
+            appState.sewageSpills = sewage;
+        }
+        
+        function updateUI() {
+            hostFishInput.value = appState.hostFishPopulation;
+            hostFishValue.textContent = appState.hostFishPopulation;
+            connectivityInput.value = appState.habitatConnectivity;
+            connectivityValue.textContent = appState.habitatConnectivity;
+            sedimentInput.value = appState.sedimentQuality;
+            sedimentValue.textContent = appState.sedimentQuality;
+            phosphateInput.value = appState.phosphate;
+            phosphateValue.textContent = appState.phosphate;
+            ammoniaInput.value = appState.ammonia;
+            ammoniaValue.textContent = appState.ammonia;
+            oxygenInput.value = appState.oxygen;
+            oxygenValue.textContent = appState.oxygen;
+            temperatureInput.value = appState.temperature;
+            temperatureValue.textContent = appState.temperature;
+            microplasticsInput.value = appState.microplastics;
+            microplasticsValue.textContent = appState.microplastics;
+            heavyMetalsInput.value = appState.heavyMetals;
+            heavyMetalsValue.textContent = appState.heavyMetals;
+            sewageInput.value = appState.sewageSpills;
+            sewageValue.textContent = appState.sewageSpills;
+        }
+        
+        // Enhanced pattern generation with scientific accuracy
+        function drawPatternRow(rowIndex) {
+            const params = getCurrentEnvironmentalParams(rowIndex);
+            const rowData = generateEnhancedPatternRow(rowIndex, params);
+            
+            const imageData = new ImageData(new Uint8ClampedArray(rowData), canvas.width, 1);
+            ctx.putImageData(imageData, 0, rowIndex);
+            
+            appState.environmentalHistory.push({
+                row: rowIndex,
+                params: {...params}
+            });
+            
+            appState.currentRow++;
+        }
+        
+        function generateEnhancedPatternRow(rowIndex, params) {
+            const width = canvas.width;
+            const rowData = new Uint8ClampedArray(width * 4);
+            
+            // Progress through growth (0-1)
+            const progress = rowIndex / appState.totalRows;
+            
+            // Calculate environmental complexity based on conditions
+            const environmentalComplexity = calculateEnvironmentalComplexity(params);
+            
+            for (let x = 0; x < width; x++) {
+                // Generate base pattern with enhanced algorithms
+                let patternValue = generateEnhancedPattern(x, rowIndex, params, environmentalComplexity);
+                
+                // Apply stress effects
+                patternValue = applyStressEffects(patternValue, x, rowIndex, params);
+                
+                // Calculate color with golden tones and stress indicators
+                const color = calculateEnhancedColor(patternValue, params, x, rowIndex, progress);
+                
+                const pixelIndex = x * 4;
+                rowData[pixelIndex] = color.r;
+                rowData[pixelIndex + 1] = color.g;
+                rowData[pixelIndex + 2] = color.b;
+                rowData[pixelIndex + 3] = 255;
+            }
+            
+            return rowData;
+        }
+        
+        function calculateEnvironmentalComplexity(params) {
+            const baseComplexity = 0.3;
+            const tempStress = Math.abs(params.temperature - 14) * 0.08;
+            const chemicalStress = (params.heavyMetals / 50 + (params.ammonia - 1) / 4) * 0.15;
+            const microplasticEffect = params.microplastics * 0.006;
+            const oxygenEffect = Math.max(0, (80 - params.oxygen)) * 0.01;
+            
+            return Math.min(1.0, baseComplexity + tempStress + chemicalStress + microplasticEffect + oxygenEffect);
+        }
+        
+        function generateEnhancedPattern(x, y, params, complexity) {
+            // Umbo position at top center of canvas
+            const centerX = canvas.width / 2;
+            const centerY = 0; // Top of canvas for accurate umbo position
+            
+            // Enhanced Y-axis elongation for natural mussel shape
+            const elongationFactor = 2.8; // Increased elongation
+            const dx = (x - centerX);
+            const dy = (y - centerY) * elongationFactor;
+            const distance = Math.sqrt(dx * dx + dy * dy) / canvas.width;
+            
+            // CONCENTRIC GROWTH RINGS - curved bands following shell shape
+            const baseRingDensity = 12 + complexity * 8;
+            const tempVariation = (params.temperature - 14) / 6; // Temperature affects ring spacing
+            const ringDensity = baseRingDensity * (1 + tempVariation * 0.2);
+            
+            const concentricRings = Math.sin(distance * ringDensity * Math.PI * 2);
+            
+            // RADIAL STRIATIONS - lines radiating from umbo
+            const angle = Math.atan2(dy, dx);
+            const radialDensity = 24; // Number of radial striations
+            const radialPattern = Math.sin(angle * radialDensity) * 0.3;
+            
+            // Enhanced radial pattern with realistic variation
+            const radialVariation = Math.sin(distance * Math.PI * 4) * 0.1; // Varies along radius
+            const finalRadialPattern = radialPattern * (0.8 + radialVariation);
+            
+            // SEASONAL GROWTH BANDING - subtle annual variations
+            const seasonalFactor = Math.sin(distance * Math.PI * 8) * 0.2;
+            
+            // SURFACE TEXTURE - natural shell roughness
+            const surfaceTexture = perlinNoise(x * 0.03, y * 0.03) * complexity * 0.15;
+            
+            // GROWTH INTERRUPTION PATTERNS - environmental stress
+            const stressInterruption = Math.sin(distance * Math.PI * 16) * complexity * 0.1;
+            
+            // Combine all pattern elements with realistic weighting
+            let patternValue = (
+                concentricRings * 0.5 +           // Primary growth rings
+                finalRadialPattern * 0.25 +       // Radial striations
+                seasonalFactor * 0.1 +            // Seasonal variations
+                surfaceTexture * 0.1 +            // Surface texture
+                stressInterruption * 0.05         // Stress patterns
+            );
+            
+            // Normalize to 0-1
+            patternValue = (patternValue + 1) * 0.5;
+            
+            // Add natural asymmetry based on distance from umbo
+            const asymmetryFactor = 1 + (distance * 0.1);
+            patternValue *= asymmetryFactor;
+            
+            return Math.max(0, Math.min(1, patternValue));
+        }
+        
+        function applyStressEffects(patternValue, x, y, params) {
+            let result = patternValue;
+            
+            // Calculate distance from umbo for curved stress bands
+            const centerX = canvas.width / 2;
+            const centerY = 0;
+            const dx = x - centerX;
+            const dy = (y - centerY) * 2.8; // Same elongation as pattern
+            const distance = Math.sqrt(dx * dx + dy * dy) / canvas.width;
+            
+            // Heavy metal stress bands (following shell curvature)
+            if (params.heavyMetals > 5) {
+                const metalRingPattern = Math.sin(distance * Math.PI * 20);
+                const metalBandIntensity = metalRingPattern * (params.heavyMetals / 50);
+                if (Math.abs(metalBandIntensity) > 0.3) {
+                    result *= (1 - Math.abs(metalBandIntensity) * 0.4);
+                }
+            }
+            
+            // Sewage spill disturbance bands (curved with shell)
+            if (params.sewageSpills > 2) {
+                const sewageRingPattern = Math.sin(distance * Math.PI * 15);
+                const sewageBanding = sewageRingPattern * (params.sewageSpills / 50);
+                if (Math.abs(sewageBanding) > 0.4) {
+                    result *= (1 - Math.abs(sewageBanding) * 0.3);
+                }
+            }
+            
+            // Temperature stress asymmetry (radial pattern)
+            if (Math.abs(params.temperature - 14) > 3) {
+                const angle = Math.atan2(dy, dx);
+                const tempAsymmetry = Math.sin(angle * 4 + distance * Math.PI * 8) * Math.abs(params.temperature - 14) * 0.015;
+                result += tempAsymmetry;
+            }
+            
+            return Math.max(0, Math.min(1, result));
+        }
+        
+        function calculateEnhancedColor(patternValue, params, x, y, progress) {
+            // Enhanced golden-yellow base colors with stronger contrast
+            let r = lerp(appState.baseColor.r, appState.darkColor.r, patternValue);
+            let g = lerp(appState.baseColor.g, appState.darkColor.g, patternValue);
+            let b = lerp(appState.baseColor.b, appState.darkColor.b, patternValue);
+            
+            // Distance-based color variation (lighter near umbo)
+            const centerX = canvas.width / 2;
+            const centerY = 0;
+            const dx = x - centerX;
+            const dy = (y - centerY) * 2.8;
+            const distance = Math.sqrt(dx * dx + dy * dy) / canvas.width;
+            
+            // Natural aging - shells get darker toward edges
+            const agingFactor = 1 - (distance * 0.2);
+            r *= agingFactor;
+            g *= agingFactor;
+            b *= agingFactor;
+            
+            // Enhanced growth ring contrast
+            const ringPattern = Math.sin(distance * Math.PI * 24);
+            if (Math.abs(ringPattern) > 0.7) {
+                const ringIntensity = (Math.abs(ringPattern) - 0.7) * 2;
+                r = lerp(r, appState.accentColor.r, ringIntensity * 0.6);
+                g = lerp(g, appState.accentColor.g, ringIntensity * 0.6);
+                b = lerp(b, appState.accentColor.b, ringIntensity * 0.6);
+            }
+            
+            // Warm yellow highlights in healthy areas
+            if (params.oxygen > 80 && params.phosphate < 0.04) {
+                const healthBonus = ((params.oxygen - 80) / 20 + (0.04 - params.phosphate) / 0.04) * 0.1;
+                r = lerp(r, appState.mediumColor.r, healthBonus);
+                g = lerp(g, appState.mediumColor.g, healthBonus);
+                b = lerp(b, appState.mediumColor.b, healthBonus);
+            }
+            
+            // Microplastic grey-white particles (tiny polyester fibers)
+            if (params.microplastics > 0) {
+                // Create multiple overlapping patterns for realistic fiber distribution
+                const pattern1 = Math.sin(x * 0.8) * Math.cos(y * 0.6);
+                const pattern2 = Math.sin((x + 7) * 0.5) * Math.cos((y + 11) * 0.4);
+                const pattern3 = Math.sin((x + 13) * 0.7) * Math.cos((y + 5) * 0.8);
+                
+                const combinedPattern = pattern1 + pattern2 * 0.7 + pattern3 * 0.5;
+                
+                // Lower threshold for higher visibility, scales with microplastic level
+                const threshold = 2.2 - (params.microplastics / 100) * 1.8;
+                
+                if (Math.abs(combinedPattern) > threshold) {
+                    // Make particles more visible and vary intensity
+                    const baseIntensity = 0.3 + (params.microplastics / 100) * 0.4;
+                    const particleIntensity = Math.min(0.7, Math.abs(combinedPattern) * baseIntensity);
+                    
+                    r = lerp(r, appState.microplasticColor.r, particleIntensity);
+                    g = lerp(g, appState.microplasticColor.g, particleIntensity);
+                    b = lerp(b, appState.microplasticColor.b, particleIntensity);
+                }
+                
+                // Add occasional larger microplastic clumps for realism
+                const clumpPattern = Math.sin(x * 0.2) * Math.cos(y * 0.15) * Math.sin((x + y) * 0.1);
+                const clumpThreshold = 2.7 - (params.microplastics / 100) * 0.5;
+                
+                if (Math.abs(clumpPattern) > clumpThreshold && params.microplastics > 20) {
+                    const clumpIntensity = Math.min(0.5, Math.abs(clumpPattern) * 0.3);
+                    r = lerp(r, appState.microplasticColor.r, clumpIntensity);
+                    g = lerp(g, appState.microplasticColor.g, clumpIntensity);
+                    b = lerp(b, appState.microplasticColor.b, clumpIntensity);
+                }
+            }
+            
+            // Heavy metal dark bands (following shell curvature)
+            if (params.heavyMetals > 8) {
+                const metalRingPattern = Math.sin(distance * Math.PI * 20);
+                if (Math.abs(metalRingPattern) > 0.4) {
+                    const metalIntensity = Math.abs(metalRingPattern) * 0.3;
+                    r = lerp(r, appState.heavyMetalColor.r, metalIntensity);
+                    g = lerp(g, appState.heavyMetalColor.g, metalIntensity);
+                    b = lerp(b, appState.heavyMetalColor.b, metalIntensity);
+                }
+            }
+            
+            // Organic pollution brown bands (curved)
+            if (params.sewageSpills > 3) {
+                const organicRingPattern = Math.sin(distance * Math.PI * 15);
+                if (Math.abs(organicRingPattern) > 0.35) {
+                    const organicIntensity = Math.abs(organicRingPattern) * 0.2;
+                    r = lerp(r, appState.organicColor.r, organicIntensity);
+                    g = lerp(g, appState.organicColor.g, organicIntensity);
+                    b = lerp(b, appState.organicColor.b, organicIntensity);
+                }
+            }
+            
+            // Temperature stress red tinting (subtle)
+            if (Math.abs(params.temperature - 14) > 4) {
+                const tempStress = (Math.abs(params.temperature - 14) - 4) / 6;
+                const thermalIntensity = Math.min(0.15, tempStress);
+                r = lerp(r, appState.thermalColor.r, thermalIntensity);
+                g = lerp(g, appState.thermalColor.g, thermalIntensity);
+                b = lerp(b, appState.thermalColor.b, thermalIntensity);
+            }
+            
+            // Add some green accent for natural variation (reduced from original)
+            const greenAccentZones = Math.sin(distance * Math.PI * 6) * Math.cos(Math.atan2(dy, dx) * 3);
+            if (Math.abs(greenAccentZones) > 0.8) {
+                const greenIntensity = 0.1; // Subtle green accents
+                const greenAccent = { r: 139, g: 159, b: 71 }; // Original green color as accent
+                r = lerp(r, greenAccent.r, greenIntensity);
+                g = lerp(g, greenAccent.g, greenIntensity);
+                b = lerp(b, greenAccent.b, greenIntensity);
+            }
+            
+            // Clamp values
+            r = Math.max(0, Math.min(255, Math.floor(r)));
+            g = Math.max(0, Math.min(255, Math.floor(g)));
+            b = Math.max(0, Math.min(255, Math.floor(b)));
+            
+            return { r, g, b };
+        }
+        
+        function getCurrentEnvironmentalParams(rowIndex) {
+            const position = rowIndex / appState.totalRows;
+            
+            const params = {
+                hostFishPopulation: appState.hostFishPopulation,
+                habitatConnectivity: appState.habitatConnectivity,
+                sedimentQuality: appState.sedimentQuality,
+                phosphate: appState.phosphate,
+                ammonia: appState.ammonia,
+                oxygen: appState.oxygen,
+                temperature: appState.temperature,
+                microplastics: appState.microplastics,
+                heavyMetals: appState.heavyMetals,
+                sewageSpills: appState.sewageSpills
+            };
+            
+            // Add seasonal variations
+            const seasonalCycle = Math.sin(position * Math.PI * 2 * appState.growthYears / 4) * 2;
+            params.temperature += seasonalCycle;
+            params.oxygen -= seasonalCycle * 3;
+            
+            // Apply scenario-based trends
+            applyScenarioTrends(params, position);
+            
+            return params;
+        }
+        
+        function applyScenarioTrends(params, position) {
+            const scenario = appState.climateScenario;
+            const changeFactor = position * 0.5;
+            
+            switch (scenario) {
+                case 'current':
+                    params.microplastics += changeFactor * 10;
+                    params.temperature += changeFactor * 0.5;
+                    break;
+                case 'restoration-2030':
+                    params.hostFishPopulation += changeFactor * 20;
+                    params.phosphate *= (1 - changeFactor * 0.3);
+                    params.sewageSpills *= (1 - changeFactor * 0.5);
+                    break;
+                case 'full-recovery':
+                    params.hostFishPopulation += changeFactor * 15;
+                    params.phosphate *= (1 - changeFactor * 0.5);
+                    params.ammonia *= (1 - changeFactor * 0.4);
+                    params.microplastics *= (1 - changeFactor * 0.3);
+                    break;
+            }
+        }
+        
+        // Control functions
+        function togglePlayPause() {
+            appState.isPlaying = !appState.isPlaying;
+            
+            if (appState.isPlaying) {
+                playBtn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <rect x="4" y="3" width="3" height="10" fill="currentColor"/>
+                        <rect x="9" y="3" width="3" height="10" fill="currentColor"/>
+                    </svg>
+                `;
+                playBtn.setAttribute('aria-label', 'Pause animation');
+                animatePattern();
+            } else {
+                playBtn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M4 3L12 8L4 13V3Z" fill="currentColor"/>
+                    </svg>
+                `;
+                playBtn.setAttribute('aria-label', 'Play animation');
+                
+                if (appState.animationFrameId) {
+                    cancelAnimationFrame(appState.animationFrameId);
+                    appState.animationFrameId = null;
+                }
+            }
+        }
+        
+        function animatePattern() {
+            if (!appState.isPlaying) return;
+            
+            if (appState.currentRow < appState.totalRows) {
+                drawPatternRow(appState.currentRow);
+                updateTimeDisplay();
+                
+                setTimeout(() => {
+                    appState.animationFrameId = requestAnimationFrame(animatePattern);
+                }, 50 / appState.speed);
+            } else {
+                appState.isPlaying = false;
+                playBtn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M4 3L12 8L4 13V3Z" fill="currentColor"/>
+                    </svg>
+                `;
+                playBtn.setAttribute('aria-label', 'Play animation');
+                updateStatus('Shell growth animation complete. Pattern shows ' + appState.growthYears + ' years of environmental history.');
+            }
+        }
+        
+        function updateTimeDisplay() {
+            const totalMonths = Math.floor(appState.currentRow * appState.monthsPerRow);
+            const years = Math.floor(totalMonths / 12);
+            const months = totalMonths % 12;
+            
+            currentTimeDisplay.textContent = `${years}y ${months}m`;
+        }
+        
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        function regeneratePattern() {
+            loadingOverlay.style.display = 'flex';
+            updateStatus('Generating new shell pattern based on current environmental conditions...');
+            
+            setTimeout(() => {
+                appState.currentRow = 0;
+                appState.isPlaying = false;
+                currentTimeDisplay.textContent = '0y 0m';
+                
+                appState.monthsPerRow = (appState.growthYears * 12) / appState.totalRows;
+                
+                clearCanvas();
+                appState.environmentalHistory = [];
+                
+                playBtn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M4 3L12 8L4 13V3Z" fill="currentColor"/>
+                    </svg>
+                `;
+                playBtn.setAttribute('aria-label', 'Play animation');
+                
+                drawPatternRow(0);
+                
+                loadingOverlay.style.display = 'none';
+                updateStatus('New shell pattern generated. Press play to watch ' + appState.growthYears + ' years of growth.');
+            }, 100);
+        }
+        
+        function downloadPattern() {
+            const exportCanvas = document.createElement('canvas');
+            const exportCtx = exportCanvas.getContext('2d');
+            
+            const scale = 3;
+            exportCanvas.width = canvas.width * scale;
+            exportCanvas.height = canvas.height * scale;
+            
+            exportCtx.scale(scale, scale);
+            exportCtx.drawImage(canvas, 0, 0);
+            
+            const link = document.createElement('a');
+            const scenario = appState.climateScenario.replace('-', '_');
+            const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
+            const filename = `hogsmill_painters_mussel_${scenario}_${appState.growthYears}years_${timestamp}.png`;
+            
+            link.download = filename;
+            link.href = exportCanvas.toDataURL('image/png');
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            updateStatus('Shell pattern downloaded as ' + filename);
+        }
+        
+        function updateStatus(message) {
+            statusMessage.textContent = message;
+            console.log(message);
+        }
+        
+        // Utility functions
+        function lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+        
+        function perlinNoise(x, y) {
+            function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+            function lerp(a, b, t) { return a + t * (b - a); }
+            function grad(hash, x, y) {
+                const h = hash & 15;
+                const u = h < 8 ? x : y;
+                const v = h < 4 ? y : h === 12 || h === 14 ? x : 0;
+                return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
+            }
+            
+            const p = new Array(512);
+            const permutation = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
+            
+            for (let i = 0; i < 256; i++) {
+                p[i] = p[i + 256] = permutation[i];
+            }
+            
+            const X = Math.floor(x) & 255;
+            const Y = Math.floor(y) & 255;
+            
+            x -= Math.floor(x);
+            y -= Math.floor(y);
+            
+            const u = fade(x);
+            const v = fade(y);
+            
+            const a  = p[X] + Y;
+            const aa = p[a];
+            const ab = p[a + 1];
+            const b  = p[X + 1] + Y;
+            const ba = p[b];
+            const bb = p[b + 1];
+            
+            return lerp(
+                lerp(grad(p[aa], x, y), grad(p[ba], x-1, y), u),
+                lerp(grad(p[ab], x, y-1), grad(p[bb], x-1, y-1), u),
+                v
+            );
+        }
+        
+        // Initialize application
+        function initializeApp() {
+            resizeCanvas();
+            initializeUI();
+            setupEventListeners();
+            
+            // Add resize event listener
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                regeneratePattern();
+            });
+            
+            appState.monthsPerRow = (appState.growthYears * 12) / appState.totalRows;
+            
+            // Generate initial pattern
+            setTimeout(() => {
+                drawPatternRow(0);
+                loadingOverlay.style.display = 'none';
+                updateStatus('Hogsmill River Restoration Pattern Generator initialized. Current scenario: Summer 2025 conditions.');
+            }, 500);
+        }
+        
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
