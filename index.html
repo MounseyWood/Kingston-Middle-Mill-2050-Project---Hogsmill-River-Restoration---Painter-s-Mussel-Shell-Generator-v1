@@ -1428,12 +1428,15 @@
         function calculateScenarioBasedColor(patternValue, x, y, progress, width, height) {
             const scenario = appState.climateScenario;
             
-            // Distance from umbo for aging effects
+            // Distance from umbo for aging and growth band effects
             const centerX = width / 2;
             const centerY = 0;
             const dx = x - centerX;
             const dy = (y - centerY) * 2.8;
             const distance = Math.sqrt(dx * dx + dy * dy) / width;
+            
+            // Timeline position: 0 = oldest (2025, top), 1 = newest (2050, bottom)
+            const timelinePosition = progress; // y increases = newer growth
             
             let r, g, b;
             
@@ -1456,7 +1459,7 @@
                     g = lerp(appState.darkColor.g - 20, appState.accentColor.g, patternValue);
                     b = lerp(appState.darkColor.b - 10, appState.accentColor.b, patternValue);
                     
-                    // Add dark pollution bands and cracks
+                    // Add dark pollution bands following shell curvature
                     const pollutionRings = Math.sin(distance * Math.PI * 18);
                     if (Math.abs(pollutionRings) > 0.3) {
                         const pollutionIntensity = Math.abs(pollutionRings) * 0.5;
@@ -1472,17 +1475,20 @@
                     g = lerp(appState.baseColor.g, appState.darkColor.g, patternValue);
                     b = lerp(appState.baseColor.b, appState.darkColor.b, patternValue);
                     
-                    // Add natural microplastic particles (improved random distribution)
+                    // Add microplastics following concentric bands - more in recent growth
                     if (appState.microplastics > 0) {
-                        const microplasticNoise1 = perlinNoise(x * 0.15 + 17, y * 0.12 + 23);
-                        const microplasticNoise2 = perlinNoise(x * 0.08 + 41, y * 0.18 + 7);
-                        const microplasticNoise3 = perlinNoise(x * 0.22 + 3, y * 0.09 + 31);
+                        // Microplastics increase over time (more in newer growth)
+                        const microplasticIntensity = 0.3 + (timelinePosition * 0.7);
+                        
+                        const microplasticNoise1 = perlinNoise(x * 0.15 + 17, distance * 50 + 23);
+                        const microplasticNoise2 = perlinNoise(x * 0.08 + 41, distance * 80 + 7);
+                        const microplasticNoise3 = perlinNoise(x * 0.22 + 3, distance * 60 + 31);
                         
                         const combinedNoise = (microplasticNoise1 + microplasticNoise2 * 0.7 + microplasticNoise3 * 0.5) / 2.2;
-                        const threshold = 0.4 - (appState.microplastics / 200);
+                        const threshold = 0.4 - (appState.microplastics / 200) * microplasticIntensity;
                         
                         if (combinedNoise > threshold) {
-                            const particleIntensity = Math.min(0.6, (combinedNoise - threshold) * 2);
+                            const particleIntensity = Math.min(0.6, (combinedNoise - threshold) * 2 * microplasticIntensity);
                             r = lerp(r, appState.microplasticColor.r, particleIntensity);
                             g = lerp(g, appState.microplasticColor.g, particleIntensity);
                             b = lerp(b, appState.microplasticColor.b, particleIntensity);
@@ -1491,35 +1497,117 @@
                     break;
                     
                 case 'full-recovery':
-                    // New growth golden, older growth darker with some microplastic damage
-                    if (progress < 0.3) {
-                        // Older growth (bottom of shell) - darker with some damage
-                        r = lerp(appState.darkColor.r, appState.accentColor.r, patternValue);
-                        g = lerp(appState.darkColor.g, appState.accentColor.g, patternValue);
-                        b = lerp(appState.darkColor.b, appState.accentColor.b, patternValue);
+                    // Smooth transition from old polluted growth to new clean growth
+                    // Timeline: 2025 (top, old) -> 2050 (bottom, new)
+                    
+                    if (timelinePosition < 0.4) {
+                        // Early years (2025-2035): Polluted conditions
+                        r = lerp(appState.darkColor.r - 10, appState.accentColor.r, patternValue);
+                        g = lerp(appState.darkColor.g - 10, appState.accentColor.g, patternValue);
+                        b = lerp(appState.darkColor.b - 5, appState.accentColor.b, patternValue);
                         
-                        // Some residual microplastic damage in older layers
+                        // Heavy microplastic contamination in early years
+                        const earlyMicroplastics = 1.0 - (timelinePosition / 0.4) * 0.3; // High contamination
                         if (appState.microplastics > 0) {
-                            const oldMicroplasticNoise = perlinNoise(x * 0.1 + 11, y * 0.15 + 19);
-                            if (oldMicroplasticNoise > 0.3) {
-                                const intensity = (oldMicroplasticNoise - 0.3) * 0.4;
+                            const oldMicroplasticNoise = perlinNoise(x * 0.12 + 11, distance * 45 + 19);
+                            const threshold = 0.35 - (appState.microplastics / 300) * earlyMicroplastics;
+                            if (oldMicroplasticNoise > threshold) {
+                                const intensity = (oldMicroplasticNoise - threshold) * 0.5 * earlyMicroplastics;
                                 r = lerp(r, appState.microplasticColor.r, intensity);
                                 g = lerp(g, appState.microplasticColor.g, intensity);
                                 b = lerp(b, appState.microplasticColor.b, intensity);
                             }
                         }
-                    } else {
-                        // New growth (top of shell) - beautiful golden recovery
-                        r = lerp(appState.baseColor.r + 15, appState.mediumColor.r + 10, patternValue);
-                        g = lerp(appState.baseColor.g + 15, appState.mediumColor.g + 10, patternValue);
-                        b = lerp(appState.baseColor.b, appState.mediumColor.b, patternValue);
                         
-                        // Recovery golden boost
-                        const recoveryBoost = 1.05;
+                    } else if (timelinePosition < 0.7) {
+                        // Transition years (2035-2042): Gradual improvement
+                        const transitionProgress = (timelinePosition - 0.4) / 0.3; // 0 to 1
+                        
+                        // Blend from polluted to clean
+                        const oldR = lerp(appState.darkColor.r - 10, appState.accentColor.r, patternValue);
+                        const oldG = lerp(appState.darkColor.g - 10, appState.accentColor.g, patternValue);
+                        const oldB = lerp(appState.darkColor.b - 5, appState.accentColor.b, patternValue);
+                        
+                        const newR = lerp(appState.baseColor.r + 15, appState.mediumColor.r + 10, patternValue);
+                        const newG = lerp(appState.baseColor.g + 15, appState.mediumColor.g + 10, patternValue);
+                        const newB = lerp(appState.baseColor.b, appState.mediumColor.b, patternValue);
+                        
+                        r = lerp(oldR, newR, transitionProgress);
+                        g = lerp(oldG, newG, transitionProgress);
+                        b = lerp(oldB, newB, transitionProgress);
+                        
+                        // Decreasing microplastics during transition
+                        const transitionMicroplastics = 0.7 * (1 - transitionProgress);
+                        if (appState.microplastics > 0) {
+                            const transitionNoise = perlinNoise(x * 0.1 + 7, distance * 40 + 13);
+                            const threshold = 0.4 - (appState.microplastics / 250) * transitionMicroplastics;
+                            if (transitionNoise > threshold) {
+                                const intensity = (transitionNoise - threshold) * 0.4 * transitionMicroplastics;
+                                r = lerp(r, appState.microplasticColor.r, intensity);
+                                g = lerp(g, appState.microplasticColor.g, intensity);
+                                b = lerp(b, appState.microplasticColor.b, intensity);
+                            }
+                        }
+                        
+                    } else {
+                        // Recovery years (2042-2050): Beautiful golden new growth
+                        r = lerp(appState.baseColor.r + 20, appState.mediumColor.r + 15, patternValue);
+                        g = lerp(appState.baseColor.g + 20, appState.mediumColor.g + 15, patternValue);
+                        b = lerp(appState.baseColor.b + 5, appState.mediumColor.b + 5, patternValue);
+                        
+                        // Enhanced golden recovery boost
+                        const recoveryBoost = 1.08;
                         r = Math.min(255, r * recoveryBoost);
                         g = Math.min(255, g * recoveryBoost);
+                        
+                        // Minimal microplastics in recovery period
+                        if (appState.microplastics > 0) {
+                            const recoveryNoise = perlinNoise(x * 0.08 + 3, distance * 35 + 5);
+                            const threshold = 0.5 - (appState.microplastics / 400) * 0.3; // Very low contamination
+                            if (recoveryNoise > threshold) {
+                                const intensity = (recoveryNoise - threshold) * 0.2;
+                                r = lerp(r, appState.microplasticColor.r, intensity);
+                                g = lerp(g, appState.microplasticColor.g, intensity);
+                                b = lerp(b, appState.microplasticColor.b, intensity);
+                            }
+                        }
                     }
                     break;
+            }
+            
+            // Apply environmental stress effects following concentric bands
+            // Heavy metals create dark bands following shell curvature
+            if (appState.heavyMetals > 8) {
+                const metalRingPattern = Math.sin(distance * Math.PI * 20);
+                const metalBandIntensity = metalRingPattern * (appState.heavyMetals / 50);
+                if (Math.abs(metalBandIntensity) > 0.4) {
+                    const metalIntensity = Math.abs(metalBandIntensity) * 0.3;
+                    r = lerp(r, appState.heavyMetalColor.r, metalIntensity);
+                    g = lerp(g, appState.heavyMetalColor.g, metalIntensity);
+                    b = lerp(b, appState.heavyMetalColor.b, metalIntensity);
+                }
+            }
+            
+            // Sewage spill disturbance bands following shell curvature
+            if (appState.sewageSpills > 3) {
+                const sewageRingPattern = Math.sin(distance * Math.PI * 15);
+                const sewageBanding = sewageRingPattern * (appState.sewageSpills / 50);
+                if (Math.abs(sewageBanding) > 0.35) {
+                    const organicIntensity = Math.abs(sewageBanding) * 0.25;
+                    r = lerp(r, appState.organicColor.r, organicIntensity);
+                    g = lerp(g, appState.organicColor.g, organicIntensity);
+                    b = lerp(b, appState.organicColor.b, organicIntensity);
+                }
+            }
+            
+            // Temperature stress affecting shell symmetry
+            if (Math.abs(appState.temperature - 14) > 4) {
+                const angle = Math.atan2(dy, dx);
+                const tempAsymmetry = Math.sin(angle * 4 + distance * Math.PI * 8) * Math.abs(appState.temperature - 14) * 0.01;
+                const thermalIntensity = Math.min(0.1, Math.abs(tempAsymmetry));
+                r = lerp(r, appState.thermalColor.r, thermalIntensity);
+                g = lerp(g, appState.thermalColor.g, thermalIntensity);
+                b = lerp(b, appState.thermalColor.b, thermalIntensity);
             }
             
             // Enhanced growth ring contrast for all scenarios
